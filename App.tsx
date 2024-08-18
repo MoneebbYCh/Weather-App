@@ -1,117 +1,95 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useState } from 'react';
+import { View, Text, Button, TextInput, StyleSheet, Alert } from 'react-native';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+type WeatherData = {
+  name: string;
+  sys: {
+    country: string;
+  };
+  main: {
+    temp: number;
+  };
+  weather: {
+    description: string;
+  }[];
+};
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const App = () => {
+  const [city, setCity] = useState<string>('');
+  const [weather, setWeather] = useState<WeatherData | null>(null);
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
-
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const fetchWeather = async () => {
+    try {
+      const apiKey = '191397a011cf91338646aef9f7ab4fb9'; 
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`
+      );
+      const data: WeatherData = await response.json();
+      if (data) {
+        setWeather(data);
+      } else {
+        Alert.alert('Error', 'City not found!');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch weather data');
+    }
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
+    <View style={styles.container}>
+      <Text style={styles.title}>Weather App</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter city name"
+        value={city}
+        onChangeText={setCity}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+      <Button title="Get Weather" onPress={fetchWeather} />
+      {weather && (
+        <View style={styles.weatherContainer}>
+          <Text style={styles.weatherText}>
+            {weather.name}, {weather.sys.country}
+          </Text>
+          <Text style={styles.weatherText}>
+            Temperature: {weather.main.temp}°C
+          </Text>
+          <Text style={styles.weatherText}>
+            Weather: {weather.weather[0].description}
+          </Text>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      )}
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
   },
-  sectionTitle: {
+  title: {
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
-  sectionDescription: {
-    marginTop: 8,
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    borderRadius: 5,
+    width: '80%',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  weatherContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  weatherText: {
     fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
+    marginBottom: 5,
   },
 });
 
